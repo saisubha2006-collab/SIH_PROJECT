@@ -270,8 +270,8 @@ export const GoogleSatelliteMap: React.FC<GoogleSatelliteMapProps> = (props) => 
       {hasApiKey ? (
         <APIProvider apiKey={apiKey}>
           <Map
-            center={{ lat: props.center[0], lng: props.center[1] }}
-            zoom={props.zoom}
+            defaultCenter={{ lat: props.center[0], lng: props.center[1] }}
+            defaultZoom={props.zoom}
             mapTypeId={mapType}
             internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
             style={{ width: '100%', height: '100%' }}

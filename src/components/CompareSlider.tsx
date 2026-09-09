@@ -389,15 +389,59 @@ export const CompareSlider: React.FC<CompareSliderProps> = ({
           </div>
         )}
 
-        {/* View Mode 4: Real Google Satellite Imagery */}
+        {/* View Mode 4: Real Google Satellite Imagery (With Slider) */}
         {viewMode === 'google_satellite' && (
-          <div className="absolute inset-0 w-full h-full">
-            <GoogleSatelliteMap
-              coordinates={coordinates}
-              center={center}
-              zoom={15}
-            />
-          </div>
+          <>
+            {/* PRESENT LAYER (Background Right: Real Google Map) */}
+            <div className="absolute inset-0 w-full h-full">
+              <GoogleSatelliteMap
+                coordinates={coordinates}
+                center={center}
+                zoom={15}
+              />
+              <div className="absolute top-4 right-4 z-20 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-700 shadow-lg text-xs font-bold text-sky-400 flex items-center gap-1.5 pointer-events-none">
+                <span>PRESENT</span>
+                <span className="text-white font-mono">(Real Satellite)</span>
+              </div>
+            </div>
+
+            {/* PAST LAYER (Clipped Left: Synthetic Past Canvas) */}
+            <div
+              className="absolute inset-y-0 left-0 overflow-hidden z-10 border-r-2 border-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.5)] pointer-events-none"
+              style={{ width: `${sliderPos}%` }}
+            >
+              <div
+                className="absolute inset-y-0 left-0 w-full h-full bg-slate-950"
+                style={{ width: `${containerRef.current?.clientWidth || 800}px` }}
+              >
+                <canvas
+                  ref={(c) => {
+                    if (c && pastCanvasRef.current) {
+                      const ctx = c.getContext('2d');
+                      ctx?.drawImage(pastCanvasRef.current, 0, 0, c.width, c.height);
+                    }
+                  }}
+                  width={800}
+                  height={800}
+                  className="w-full h-full object-cover opacity-90"
+                />
+              </div>
+              <div className="absolute top-4 left-4 z-20 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-700 shadow-lg text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                <span>PAST</span>
+                <span className="text-white font-mono">({pastYear})</span>
+              </div>
+            </div>
+
+            {/* Central Draggable Handle */}
+            <div
+              className="absolute top-0 bottom-0 z-30 flex items-center justify-center pointer-events-none"
+              style={{ left: `${sliderPos}%`, transform: 'translateX(-50%)' }}
+            >
+              <div className="w-8 h-8 rounded-full bg-sky-400 text-slate-950 font-bold text-xs flex items-center justify-center shadow-lg border-2 border-white pointer-events-auto cursor-ew-resize">
+                <SlidersHorizontal className="w-4 h-4" />
+              </div>
+            </div>
+          </>
         )}
 
         {/* Bottom Floating Control Bar on Viewer */}
@@ -458,9 +502,27 @@ export const CompareSlider: React.FC<CompareSliderProps> = ({
               </label>
             </div>
           ) : viewMode === 'google_satellite' ? (
-            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Real Google Satellite &amp; Earth Observation Optical Imagery Active</span>
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto flex-1">
+              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Real Satellite Compare</span>
+              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto flex-1 max-w-md">
+                <span className="text-[11px] text-emerald-400 font-mono font-semibold whitespace-nowrap">
+                  ← {pastYear}
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={sliderPos}
+                  onChange={(e) => setSliderPos(Number(e.target.value))}
+                  className="w-full accent-sky-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                />
+                <span className="text-[11px] text-sky-400 font-mono font-semibold whitespace-nowrap">
+                  Present →
+                </span>
+              </div>
             </div>
           ) : (
             <div className="flex flex-wrap items-center gap-2 text-[11px]">
