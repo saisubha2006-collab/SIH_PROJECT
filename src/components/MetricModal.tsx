@@ -54,10 +54,10 @@ export const MetricModal: React.FC<MetricModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+          className="absolute top-4 right-4 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white p-1 rounded-lg hover:bg-slate-100 dark:bg-slate-800 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -66,17 +66,17 @@ export const MetricModal: React.FC<MetricModalProps> = ({
           <div className="p-2 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
             <Calculator className="w-5 h-5" />
           </div>
-          <h3 className="text-base font-bold text-white pr-6">{item.title}</h3>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white pr-6">{item.title}</h3>
         </div>
 
         {/* Formula Box */}
-        <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono text-sky-300 mb-4 break-words">
+        <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-mono text-sky-300 mb-4 break-words">
           <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Mathematical Formula:</div>
           {item.formula}
         </div>
 
         {/* Scientific Explanation */}
-        <p className="text-xs text-slate-300 leading-relaxed mb-4">
+        <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
           {item.explanation}
         </p>
 
@@ -89,7 +89,7 @@ export const MetricModal: React.FC<MetricModalProps> = ({
         <div className="mt-5 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-colors"
+            className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl text-xs font-semibold transition-colors"
           >
             Close
           </button>

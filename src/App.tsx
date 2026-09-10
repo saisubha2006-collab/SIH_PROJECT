@@ -24,6 +24,15 @@ export default function App() {
   const [customCoords, setCustomCoords] = useState<[number, number][]>(PRESET_AREAS[0].coordinates);
   const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false);
   const [isMapExpanded, setIsMapExpanded] = useState<boolean>(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
@@ -107,6 +116,12 @@ export default function App() {
     setSelectedPreset(null);
   };
 
+  const handleLocationSearched = (name: string, center: [number, number], coords: [number, number][]) => {
+    setCustomCoords(coords);
+    setSelectedPreset(null);
+    setIsDrawingMode(false);
+  };
+
   const currentCenter: [number, number] = selectedPreset
     ? selectedPreset.center
     : customCoords.length > 0
@@ -114,7 +129,7 @@ export default function App() {
     : [20.6586, 85.5956];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
       {/* Top Navigation */}
       <Navbar
         selectedPresetId={selectedPreset?.id}
@@ -122,6 +137,8 @@ export default function App() {
         onOpenReport={() => setIsReportOpen(true)}
         onOpenMethodology={() => setIsMethodologyOpen(true)}
         hasAnalysis={!!analysis}
+        isDarkMode={isDarkMode}
+        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
       />
 
       {/* Main App Container */}
@@ -133,7 +150,7 @@ export default function App() {
             <span>{errorMsg}</span>
             <button
               onClick={() => setErrorMsg(null)}
-              className="text-slate-400 hover:text-white font-bold ml-4"
+              className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white font-bold ml-4"
             >
               Dismiss
             </button>
@@ -144,6 +161,7 @@ export default function App() {
         <AreaSelector
           selectedPreset={selectedPreset}
           onSelectPreset={handleSelectPreset}
+          onLocationSearched={handleLocationSearched}
           pastYear={pastYear}
           presentYear={presentYear}
           onChangePastYear={setPastYear}
@@ -161,26 +179,26 @@ export default function App() {
         />
 
         {/* Collapsible Satellite Map Preview / AOI Drawing Panel */}
-        <div className="mb-6 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
+        <div className="mb-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-lg">
           <button
             onClick={() => setIsMapExpanded(!isMapExpanded)}
-            className="w-full px-5 py-3 flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800/60 transition-colors"
+            className="w-full px-5 py-3 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:text-white bg-white/80 dark:bg-slate-900/80 hover:bg-slate-100/60 dark:hover:bg-slate-800/60 transition-colors"
           >
             <span className="flex items-center gap-2">
               <Map className="w-4 h-4 text-sky-400" />
               <span>Interactive Geospatial Map &amp; Boundary Demarcation</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-mono">
                 {customCoords.length} vertices
               </span>
             </span>
-            <span className="flex items-center gap-1 text-slate-400 text-[11px]">
+            <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-[11px]">
               {isMapExpanded ? 'Collapse Map' : 'Expand Interactive Map'}
               {isMapExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </span>
           </button>
 
           {isMapExpanded && (
-            <div className="p-4 border-t border-slate-800 h-[340px]">
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 h-[340px]">
               <SatelliteMap
                 coordinates={customCoords}
                 center={currentCenter}
@@ -204,17 +222,17 @@ export default function App() {
           <div className="space-y-6">
             
             {/* Location & Period Banner */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-900/60 border border-slate-800/80 px-5 py-3 rounded-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white/60 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 px-5 py-3 rounded-2xl">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-sky-400 shrink-0" />
                 <div>
-                  <span className="text-sm font-bold text-white">{analysis.aoi.name}</span>
-                  <span className="text-xs text-slate-400 ml-2 font-mono">
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">{analysis.aoi.name}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 ml-2 font-mono">
                     ({analysis.aoi.area_hectares} ha • {analysis.aoi.area_sqkm} km²)
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-3 text-xs font-mono text-slate-400">
+              <div className="flex items-center gap-3 text-xs font-mono text-slate-500 dark:text-slate-400">
                 <span className="flex items-center gap-1 text-sky-400 font-semibold">
                   <Calendar className="w-3.5 h-3.5" />
                   {analysis.periods.past_year} → {analysis.periods.present_year}
@@ -285,10 +303,10 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950 py-6 px-4 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950 py-6 px-4 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div>
-            <span className="font-semibold text-slate-400">SIH26167 Geospatial Intelligence</span>: Satellite Past vs Present Land Change &amp; Grounded Future Scenarios
+            <span className="font-semibold text-slate-500 dark:text-slate-400">SIH26167 Geospatial Intelligence</span>: Satellite Past vs Present Land Change &amp; Grounded Future Scenarios
           </div>
           <div className="flex items-center gap-4 text-slate-500">
             <span>Copernicus Sentinel-2</span>

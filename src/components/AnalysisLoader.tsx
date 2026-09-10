@@ -28,7 +28,7 @@ export const AnalysisLoader: React.FC<AnalysisLoaderProps> = ({ locationName }) 
   }, []);
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl mb-8 flex flex-col items-center justify-center min-h-[380px] text-center relative overflow-hidden">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-2xl mb-8 flex flex-col items-center justify-center min-h-[380px] text-center relative overflow-hidden">
       <div className="absolute top-0 right-0 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
       
       <div className="relative mb-6">
@@ -37,15 +37,15 @@ export const AnalysisLoader: React.FC<AnalysisLoaderProps> = ({ locationName }) 
         </div>
       </div>
 
-      <h3 className="text-lg font-bold text-white mb-1">
+      <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
         Running Geospatial Change Intelligence Pipeline
       </h3>
-      <p className="text-xs text-slate-400 mb-6 max-w-md font-sans">
-        Target: <strong className="text-slate-200">{locationName}</strong>. Analyzing surface reflectance transformations across Sentinel-2 constellations.
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 max-w-md font-sans">
+        Target: <strong className="text-slate-800 dark:text-slate-200">{locationName}</strong>. Analyzing surface reflectance transformations across Sentinel-2 constellations.
       </p>
 
       {/* Progress Checklist */}
-      <div className="w-full max-w-md bg-slate-950 p-4 rounded-xl border border-slate-800 text-left space-y-2">
+      <div className="w-full max-w-md bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 text-left space-y-2">
         {steps.map((text, idx) => {
           const isDone = idx < stepIndex;
           const isCurrent = idx === stepIndex;
@@ -65,7 +65,7 @@ export const AnalysisLoader: React.FC<AnalysisLoaderProps> = ({ locationName }) 
               ) : isCurrent ? (
                 <Loader2 className="w-4 h-4 text-sky-400 animate-spin shrink-0" />
               ) : (
-                <div className="w-4 h-4 rounded-full border border-slate-700 shrink-0" />
+                <div className="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-700 shrink-0" />
               )}
               <span className="truncate">{text}</span>
             </div>

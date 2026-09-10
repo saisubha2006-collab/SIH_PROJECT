@@ -16,7 +16,7 @@ export const AISummaryCard: React.FC<AISummaryCardProps> = ({ summary, analysisI
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 lg:p-6 shadow-xl mb-8 relative overflow-hidden">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 lg:p-6 shadow-xl mb-8 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
       
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
@@ -24,7 +24,7 @@ export const AISummaryCard: React.FC<AISummaryCardProps> = ({ summary, analysisI
           <div className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
             <Sparkles className="w-4 h-4" />
           </div>
-          <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
             Executive Geospatial Synthesis (Gemini API)
           </h3>
         </div>
@@ -35,7 +35,7 @@ export const AISummaryCard: React.FC<AISummaryCardProps> = ({ summary, analysisI
           </span>
           <button
             onClick={handleCopy}
-            className="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded-lg border border-slate-700 flex items-center gap-1.5 transition-colors"
+            className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 flex items-center gap-1.5 transition-colors"
           >
             {copied ? (
               <>
@@ -53,7 +53,7 @@ export const AISummaryCard: React.FC<AISummaryCardProps> = ({ summary, analysisI
       </div>
 
       <div className="relative pl-4 border-l-2 border-sky-500/60 bg-slate-950/40 p-4 rounded-r-xl">
-        <p className="text-sm text-slate-200 leading-relaxed font-sans">
+        <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-sans">
           {summary}
         </p>
       </div>

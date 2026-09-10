@@ -66,26 +66,26 @@ export const TrendChart: React.FC<TrendChartProps> = ({
   const currentYearPoint = historicalPoints[historicalPoints.length - 1];
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 lg:p-6 shadow-xl mb-8">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 lg:p-6 shadow-xl mb-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
-          <h3 className="text-base font-bold text-white flex items-center gap-2">
+          <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-sky-400" />
             <span>Historical Development Trend &amp; Scenario Horizon</span>
           </h3>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Multi-year built-up land accumulation (linear regression) extending into 3 scenario trajectories
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <div className="text-xs font-semibold text-slate-400 uppercase">Trend Velocity</div>
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Trend Velocity</div>
             <div className="text-base font-extrabold text-sky-400 font-mono">
               +{slopeHaPerYear} ha/year
             </div>
           </div>
-          <div className="px-2.5 py-1 rounded bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-400">
+          <div className="px-2.5 py-1 rounded bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] font-mono text-slate-500 dark:text-slate-400">
             R² = {rSquared}
           </div>
         </div>
@@ -259,19 +259,19 @@ export const TrendChart: React.FC<TrendChartProps> = ({
 
         {/* Hover Tooltip Overlay */}
         {hoveredPoint && (
-          <div className="absolute top-2 right-4 bg-slate-950/95 border border-slate-700 px-3 py-1.5 rounded-lg text-xs shadow-xl font-mono">
-            <span className="text-slate-400">{hoveredPoint.label} ({hoveredPoint.year}): </span>
+          <div className="absolute top-2 right-4 bg-slate-950/95 border border-slate-300 dark:border-slate-700 px-3 py-1.5 rounded-lg text-xs shadow-xl font-mono">
+            <span className="text-slate-500 dark:text-slate-400">{hoveredPoint.label} ({hoveredPoint.year}): </span>
             <span className="text-sky-400 font-bold">{hoveredPoint.value} ha</span>
           </div>
         )}
       </div>
 
       {/* Trajectory Legend */}
-      <div className="mt-4 pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-0.5 bg-sky-400 rounded-full" />
-            <span className="text-slate-300">Measured Observations (Solid)</span>
+            <span className="text-slate-700 dark:text-slate-300">Measured Observations (Solid)</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-0.5 bg-amber-400 border-b border-dashed border-amber-400" />

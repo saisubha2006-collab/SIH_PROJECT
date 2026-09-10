@@ -266,7 +266,7 @@ export const GoogleSatelliteMap: React.FC<GoogleSatelliteMapProps> = (props) => 
   const hasApiKey = Boolean(apiKey && apiKey.trim().length > 0);
 
   return (
-    <div className="relative w-full h-full min-h-[340px] rounded-xl overflow-hidden border border-slate-800 shadow-inner bg-slate-950">
+    <div className="relative w-full h-full min-h-[340px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-inner bg-slate-50 dark:bg-slate-950">
       {hasApiKey ? (
         <APIProvider apiKey={apiKey}>
           <Map
@@ -297,7 +297,7 @@ export const GoogleSatelliteMap: React.FC<GoogleSatelliteMapProps> = (props) => 
       <div className="absolute top-3 left-3 z-20 flex items-center gap-2 bg-slate-950/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700/80 shadow-lg text-xs">
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="font-bold text-white">Google Satellite Layer</span>
+          <span className="font-bold text-slate-900 dark:text-white">Google Satellite Layer</span>
         </div>
         <span className="text-slate-500">|</span>
         <div className="flex items-center gap-1">
@@ -306,7 +306,7 @@ export const GoogleSatelliteMap: React.FC<GoogleSatelliteMapProps> = (props) => 
             className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all ${
               mapType === 'hybrid'
                 ? 'bg-sky-500 text-slate-950 shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white'
             }`}
           >
             Hybrid
@@ -316,7 +316,7 @@ export const GoogleSatelliteMap: React.FC<GoogleSatelliteMapProps> = (props) => 
             className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all ${
               mapType === 'satellite'
                 ? 'bg-sky-500 text-slate-950 shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white'
             }`}
           >
             Satellite Only
@@ -333,7 +333,7 @@ export const GoogleSatelliteMap: React.FC<GoogleSatelliteMapProps> = (props) => 
       )}
 
       {/* Coordinate & Sensor Info Footer */}
-      <div className="absolute bottom-2 left-2 z-20 bg-slate-950/85 backdrop-blur-md px-3 py-1 rounded-lg text-[11px] text-slate-300 border border-slate-800 font-mono flex items-center gap-2">
+      <div className="absolute bottom-2 left-2 z-20 bg-slate-950/85 backdrop-blur-md px-3 py-1 rounded-lg text-[11px] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 font-mono flex items-center gap-2">
         <MapPin className="w-3 h-3 text-sky-400" />
         <span>
           {props.center[0].toFixed(5)}° N, {props.center[1].toFixed(5)}° E • High-Resolution Optical Earth Observation
