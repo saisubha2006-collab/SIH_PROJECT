@@ -1,5 +1,5 @@
 {
-  "name": "Land Change & Development Intelligence",
+  "name": "Geospatial Intelligence",
   "description": "Satellite-based past-vs-present land change analysis, spectral development quantification, land-cover transitions, and evidence-grounded future scenarios.",
   "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

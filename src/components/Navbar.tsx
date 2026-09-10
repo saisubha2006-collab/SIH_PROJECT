@@ -36,7 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 SIH26167
               </span>
               <h1 className="text-base md:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-                Land Change &amp; Development Intelligence
+                Geospatial Intelligence
               </h1>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">

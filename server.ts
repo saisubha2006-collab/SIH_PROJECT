@@ -105,7 +105,7 @@ async function startServer() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Land Change Intelligence Report - ${analysis.analysis_id}</title>
+  <title>Geospatial Intelligence Report - ${analysis.analysis_id}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: #1e293b; max-width: 900px; margin: 40px auto; padding: 0 20px; }
     h1 { color: #0f172a; border-bottom: 2px solid #0284c7; padding-bottom: 8px; }
@@ -126,7 +126,7 @@ async function startServer() {
 </head>
 <body>
   <div style="display:flex; justify-content:space-between; align-items:center;">
-    <h1>Land Change & Development Intelligence Report</h1>
+    <h1>Geospatial Intelligence Report</h1>
     <span class="badge badge-high">Audited & Verified</span>
   </div>
   <p><strong>Analysis ID:</strong> ${analysis.analysis_id} | <strong>Date Generated:</strong> ${new Date(analysis.timestamp).toLocaleString()} | <strong>Sensor:</strong> ${analysis.sensor} (${analysis.resolution})</p>
