@@ -30,6 +30,56 @@ interface AreaSelectorProps {
   onResetToPreset: () => void;
 }
 
+const HISTORY_KEY = 'sih26167_search_history';
+const MAX_HISTORY = 5;
+
+interface SearchHistoryEntry {
+  id: string;
+  displayName: string;
+  shortName: string;
+  center: [number, number];
+  coords: [number, number][];
+  searchedAt: number;
+}
+
+function loadHistory(): SearchHistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(entries: SearchHistoryEntry[]) {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(entries));
+  } catch {}
+}
+
+function addToHistory(entry: Omit<SearchHistoryEntry, 'id' | 'searchedAt'>) {
+  const history = loadHistory();
+  const filtered = history.filter((h) => h.displayName !== entry.displayName);
+  const newEntry: SearchHistoryEntry = {
+    ...entry,
+    id: `hist_${Date.now()}`,
+    searchedAt: Date.now(),
+  };
+  const updated = [newEntry, ...filtered].slice(0, MAX_HISTORY);
+  saveHistory(updated);
+  return updated;
+}
+
+function formatTimeAgo(ts: number): string {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
 export const AreaSelector: React.FC<AreaSelectorProps> = ({
   selectedPreset,
   onSelectPreset,
@@ -51,6 +101,7 @@ export const AreaSelector: React.FC<AreaSelectorProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryEntry[]>(loadHistory);
 
   React.useEffect(() => {
     if (!searchQuery.trim()) {
@@ -71,6 +122,58 @@ export const AreaSelector: React.FC<AreaSelectorProps> = ({
     }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  const handleSelectSearchResult = (result: any) => {
+    const [latMin, latMax, lonMin, lonMax] = result.boundingbox.map(Number);
+    const coords: [number, number][] = [
+      [latMin, lonMin],
+      [latMax, lonMin],
+      [latMax, lonMax],
+      [latMin, lonMax],
+    ];
+    const center: [number, number] = [Number(result.lat), Number(result.lon)];
+    const shortName = result.display_name.split(',').slice(0, 2).join(',').trim();
+
+    // Save to history
+    const updated = addToHistory({
+      displayName: result.display_name,
+      shortName,
+      center,
+      coords,
+    });
+    setSearchHistory(updated);
+
+    onLocationSearched(result.display_name, center, coords);
+    setShowLocationDropdown(false);
+    setSearchQuery(result.display_name);
+  };
+
+  const handleSelectHistory = (entry: SearchHistoryEntry) => {
+    // Bump timestamp on re-select
+    const updated = addToHistory({
+      displayName: entry.displayName,
+      shortName: entry.shortName,
+      center: entry.center,
+      coords: entry.coords,
+    });
+    setSearchHistory(updated);
+    onLocationSearched(entry.displayName, entry.center, entry.coords);
+    setSearchQuery(entry.displayName);
+    setShowLocationDropdown(false);
+  };
+
+  const handleDeleteHistory = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = searchHistory.filter((h) => h.id !== id);
+    setSearchHistory(updated);
+    saveHistory(updated);
+  };
+
+  const handleClearAllHistory = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSearchHistory([]);
+    saveHistory([]);
+  };
 
   const quarterLabels: Record<string, string> = {
     Q1: 'Jan 01 – Mar 31 (Post-Monsoon / Dry Winter)',
@@ -117,6 +220,7 @@ export const AreaSelector: React.FC<AreaSelectorProps> = ({
                   setShowLocationDropdown(true);
                 }}
                 onFocus={() => setShowLocationDropdown(true)}
+                onBlur={() => setTimeout(() => setShowLocationDropdown(false), 180)}
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-sky-500 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none transition-colors"
               />
               {isSearching ? (
@@ -128,28 +232,19 @@ export const AreaSelector: React.FC<AreaSelectorProps> = ({
 
             {/* Dropdown Menu */}
             {showLocationDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden py-1 max-h-72 overflow-y-auto">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden py-1 max-h-80 overflow-y-auto">
                 {searchQuery.trim() ? (
                   searchResults.length > 0 ? (
                     searchResults.map((result: any) => (
                       <button
                         key={result.place_id}
-                        onClick={() => {
-                          const [latMin, latMax, lonMin, lonMax] = result.boundingbox.map(Number);
-                          const coords: [number, number][] = [
-                            [latMin, lonMin],
-                            [latMax, lonMin],
-                            [latMax, lonMax],
-                            [latMin, lonMax],
-                          ];
-                          const center: [number, number] = [Number(result.lat), Number(result.lon)];
-                          onLocationSearched(result.display_name, center, coords);
-                          setShowLocationDropdown(false);
-                          setSearchQuery(result.display_name);
-                        }}
-                        className="w-full px-3.5 py-2.5 text-left text-xs hover:bg-slate-100 dark:bg-slate-800 flex items-start justify-between gap-2 border-b border-slate-200/50 dark:border-slate-800/50 last:border-0 text-slate-800 dark:text-slate-200"
+                        onMouseDown={() => handleSelectSearchResult(result)}
+                        className="w-full px-3.5 py-2.5 text-left text-xs hover:bg-slate-100 dark:hover:bg-slate-800 flex items-start justify-between gap-2 border-b border-slate-200/50 dark:border-slate-800/50 last:border-0 text-slate-800 dark:text-slate-200"
                       >
-                        <div className="font-semibold text-slate-900 dark:text-white truncate max-w-full">{result.display_name}</div>
+                        <div className="flex items-start gap-2 min-w-0">
+                          <MapPin className="w-3 h-3 text-sky-400 mt-0.5 shrink-0" />
+                          <span className="font-semibold text-slate-900 dark:text-white truncate">{result.display_name}</span>
+                        </div>
                       </button>
                     ))
                   ) : (
@@ -159,18 +254,69 @@ export const AreaSelector: React.FC<AreaSelectorProps> = ({
                   )
                 ) : (
                   <>
+                    {searchHistory.length > 0 && (
+                      <>
+                        <div className="px-3 py-1.5 flex items-center justify-between bg-slate-50/80 dark:bg-slate-950/80 border-b border-slate-200/60 dark:border-slate-800/60">
+                          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <svg className="w-3 h-3 text-sky-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            Recent Searches
+                          </span>
+                          <button
+                            onMouseDown={handleClearAllHistory}
+                            className="text-[10px] text-slate-400 hover:text-rose-400 transition-colors font-medium px-1.5 py-0.5 rounded hover:bg-rose-500/10"
+                          >
+                            Clear all
+                          </button>
+                        </div>
+                        {searchHistory.map((entry) => (
+                          <div
+                            key={entry.id}
+                            className="group w-full px-3.5 py-2 flex items-center justify-between gap-2 border-b border-slate-200/40 dark:border-slate-800/40 last:border-0 hover:bg-slate-100 dark:hover:bg-slate-800/70 cursor-pointer transition-colors"
+                            onMouseDown={() => handleSelectHistory(entry)}
+                          >
+                            <div className="flex items-start gap-2 min-w-0">
+                              <svg className="w-3 h-3 text-slate-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                              </svg>
+                              <div className="min-w-0">
+                                <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">{entry.shortName}</div>
+                                <div className="text-[10px] text-slate-400 truncate">{entry.displayName}</div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-[10px] font-mono text-slate-400 sm:block group-hover:hidden">
+                                {formatTimeAgo(entry.searchedAt)}
+                              </span>
+                              <button
+                                onMouseDown={(e) => handleDeleteHistory(entry.id, e)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-rose-400 p-0.5 rounded"
+                                title="Remove from history"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="h-px bg-slate-200/60 dark:bg-slate-700/60 mx-3 my-1" />
+                      </>
+                    )}
+
                     <div className="px-3 py-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-950/50">
                       Pre-Validated Satellite Demonstration Hotspots
                     </div>
                     {PRESET_AREAS.map((preset) => (
                       <button
                         key={preset.id}
-                        onClick={() => {
+                        onMouseDown={() => {
                           onSelectPreset(preset);
                           setShowLocationDropdown(false);
                           setSearchQuery('');
                         }}
-                        className={`w-full px-3.5 py-2.5 text-left text-xs hover:bg-slate-100 dark:bg-slate-800 flex items-start justify-between gap-2 border-b border-slate-200/50 dark:border-slate-800/50 last:border-0 ${
+                        className={`w-full px-3.5 py-2.5 text-left text-xs hover:bg-slate-100 dark:hover:bg-slate-800 flex items-start justify-between gap-2 border-b border-slate-200/50 dark:border-slate-800/50 last:border-0 ${
                           selectedPreset?.id === preset.id ? 'bg-sky-500/10 text-sky-300' : 'text-slate-800 dark:text-slate-200'
                         }`}
                       >

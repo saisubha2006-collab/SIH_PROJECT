@@ -13,7 +13,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { VisualTileData, LandCoverType } from '../types.ts';
-import { GoogleSatelliteMap } from './GoogleSatelliteMap.tsx';
+import { GoogleSatelliteMap, DualSyncSatelliteSlider } from './GoogleSatelliteMap.tsx';
 
 interface CompareSliderProps {
   visualGrid: VisualTileData;
@@ -389,59 +389,19 @@ export const CompareSlider: React.FC<CompareSliderProps> = ({
           </div>
         )}
 
-        {/* View Mode 4: Real Google Satellite Imagery (With Slider) */}
+        {/* View Mode 4: Real Satellite — two live synced Leaflet maps + clip slider */}
         {viewMode === 'google_satellite' && (
-          <>
-            {/* PRESENT LAYER (Background Right: Real Google Map) */}
-            <div className="absolute inset-0 w-full h-full">
-              <GoogleSatelliteMap
-                coordinates={coordinates}
-                center={center}
-                zoom={15}
-              />
-              <div className="absolute top-4 right-4 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 shadow-lg text-xs font-bold text-sky-400 flex items-center gap-1.5 pointer-events-none">
-                <span>PRESENT</span>
-                <span className="text-slate-900 dark:text-white font-mono">(Real Satellite)</span>
-              </div>
-            </div>
-
-            {/* PAST LAYER (Clipped Left: Synthetic Past Canvas) */}
-            <div
-              className="absolute inset-y-0 left-0 overflow-hidden z-10 border-r-2 border-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.5)] pointer-events-none"
-              style={{ width: `${sliderPos}%` }}
-            >
-              <div
-                className="absolute inset-y-0 left-0 w-full h-full bg-slate-50 dark:bg-slate-950"
-                style={{ width: `${containerRef.current?.clientWidth || 800}px` }}
-              >
-                <canvas
-                  ref={(c) => {
-                    if (c && pastCanvasRef.current) {
-                      const ctx = c.getContext('2d');
-                      ctx?.drawImage(pastCanvasRef.current, 0, 0, c.width, c.height);
-                    }
-                  }}
-                  width={800}
-                  height={800}
-                  className="w-full h-full object-cover opacity-90"
-                />
-              </div>
-              <div className="absolute top-4 left-4 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 shadow-lg text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-                <span>PAST</span>
-                <span className="text-slate-900 dark:text-white font-mono">({pastYear})</span>
-              </div>
-            </div>
-
-            {/* Central Draggable Handle */}
-            <div
-              className="absolute top-0 bottom-0 z-30 flex items-center justify-center pointer-events-none"
-              style={{ left: `${sliderPos}%`, transform: 'translateX(-50%)' }}
-            >
-              <div className="w-8 h-8 rounded-full bg-sky-400 text-slate-950 font-bold text-xs flex items-center justify-center shadow-lg border-2 border-white pointer-events-auto cursor-ew-resize">
-                <SlidersHorizontal className="w-4 h-4" />
-              </div>
-            </div>
-          </>
+          <div className="absolute inset-0 w-full h-full">
+            <DualSyncSatelliteSlider
+              center={center}
+              zoom={15}
+              coordinates={coordinates}
+              pastYear={pastYear}
+              presentYear={presentYear}
+              sliderPos={sliderPos}
+              onSliderChange={setSliderPos}
+            />
+          </div>
         )}
 
         {/* Bottom Floating Control Bar on Viewer */}

@@ -211,7 +211,7 @@ export function generateVisualGrid(
       } else {
         // Natural small changes
         const changeR = random();
-        if (pastCover === 'trees' && changeR < 0.05) {
+        if (pastCover === 'trees' && changeR < 0.12) {
           presentCover = 'bare';
           isChange = true;
           changeType = 'vegetation_loss';
@@ -221,10 +221,10 @@ export function generateVisualGrid(
           isChange = true;
           changeType = 'vegetation_gain';
           intensity = 0.55;
-        } else if (pastCover === 'crops' && changeR < 0.03) {
-          presentCover = 'trees';
+        } else if (pastCover === 'crops' && changeR < 0.02) {
+          presentCover = 'bare';
           isChange = true;
-          changeType = 'vegetation_gain';
+          changeType = 'vegetation_loss';
           intensity = 0.5;
         }
       }

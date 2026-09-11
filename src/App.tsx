@@ -13,6 +13,7 @@ import { MetricModal } from './components/MetricModal.tsx';
 import { ReportModal } from './components/ReportModal.tsx';
 import { MethodologyModal } from './components/MethodologyModal.tsx';
 import { AnalysisLoader } from './components/AnalysisLoader.tsx';
+import { PastDataPanel } from './components/PastDataPanel.tsx';
 import { PRESET_AREAS } from './data/presets.ts';
 import { PresetArea, AnalysisResult } from './types.ts';
 import { Map, ChevronDown, ChevronUp, MapPin, Calendar, Clock, ExternalLink } from 'lucide-react';
@@ -250,6 +251,15 @@ export default function App() {
               pastYear={analysis.periods.past_year}
               presentYear={analysis.periods.present_year}
               onOpenMetricModal={(metric) => setActiveMetricModal(metric)}
+            />
+
+            {/* 1b. Past Data & Growth Analytics — below New Development */}
+            <PastDataPanel
+              composition={analysis.land_cover_composition}
+              stats={analysis.stats}
+              pastYear={analysis.periods.past_year}
+              presentYear={analysis.periods.present_year}
+              totalAreaHa={analysis.aoi.area_hectares}
             />
 
             {/* 2. Primary Visual Experience: Split-screen Compare Slider & Heatmap */}

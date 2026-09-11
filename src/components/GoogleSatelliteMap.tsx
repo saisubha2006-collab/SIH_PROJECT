@@ -342,3 +342,241 @@ export const GoogleSatelliteMap: React.FC<GoogleSatelliteMapProps> = (props) => 
     </div>
   );
 };
+
+// ─── Dual Synchronized Satellite Slider ──────────────────────────────────────
+// Two fully synchronized Leaflet maps stacked with a CSS clip-path slider.
+// PRESENT → current Esri World Imagery (live tiles, any location).
+// PAST    → NASA GIBS Landsat historical tiles for the actual pastYear
+//           (real year-specific satellite data, globally, any location you pan to).
+
+export interface DualSyncSatelliteSliderProps {
+  center: [number, number];
+  zoom: number;
+  coordinates?: [number, number][];
+  pastYear: number;
+  presentYear: number;
+  sliderPos: number;          // 0–100
+  onSliderChange: (pos: number) => void;
+}
+
+export const DualSyncSatelliteSlider: React.FC<DualSyncSatelliteSliderProps> = ({
+  center,
+  zoom,
+  coordinates = [],
+  pastYear,
+  presentYear,
+  sliderPos,
+  onSliderChange,
+}) => {
+  const wrapperRef       = useRef<HTMLDivElement>(null);
+  const presentDivRef    = useRef<HTMLDivElement>(null);
+  const pastDivRef       = useRef<HTMLDivElement>(null);
+  const presentMapRef    = useRef<any>(null);
+  const pastMapRef       = useRef<any>(null);
+  const presentPolyRef   = useRef<any>(null);
+  const pastPolyRef      = useRef<any>(null);
+  const pastModisRef     = useRef<any>(null);   // MODIS layer handle
+  const pastLandsatRef   = useRef<any>(null);   // Landsat layer handle
+  const isSyncingRef     = useRef(false);
+  const isDraggingRef    = useRef(false);
+
+  // NASA GIBS tile URL helpers ──────────────────────────────────────────────────
+  // Landsat WELD 30 m monthly composite – maxNativeZoom 12
+  const landsatUrl = (yr: number) =>
+    `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/` +
+    `Landsat_WELD_CorrectedReflectance_TrueColor_Global_Monthly/` +
+    `default/${yr}-01-01/GoogleMapsCompatible_Level12/{z}/{y}/{x}.jpg`;
+
+  // MODIS Terra 250 m – maxNativeZoom 9, global coverage since 2002
+  const modisUrl = (yr: number) =>
+    `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/` +
+    `MODIS_Terra_CorrectedReflectance_TrueColor/` +
+    `default/${yr}-03-15/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`;
+
+  // Initialize both Leaflet maps (once) ────────────────────────────────────────
+  useEffect(() => {
+    import('leaflet').then((L) => {
+      if (!presentDivRef.current || !pastDivRef.current) return;
+      if (presentMapRef.current || pastMapRef.current) return;
+
+      // PRESENT map — current Esri World Imagery
+      const presentMap = L.map(presentDivRef.current, {
+        center, zoom, zoomControl: true, attributionControl: false,
+      });
+      L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19 }
+      ).addTo(presentMap);
+      L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
+        { subdomains: 'abcd', maxZoom: 19 }
+      ).addTo(presentMap);
+      presentMapRef.current = presentMap;
+
+      // PAST map — historical tiles added by the pastYear effect below
+      const pastMap = L.map(pastDivRef.current, {
+        center, zoom, zoomControl: false, attributionControl: false,
+      });
+      pastMapRef.current = pastMap;
+
+      // Bidirectional sync on move/zoom
+      const syncP2Pa = () => {
+        if (isSyncingRef.current || !pastMapRef.current) return;
+        isSyncingRef.current = true;
+        pastMapRef.current.setView(presentMap.getCenter(), presentMap.getZoom(), { animate: false });
+        isSyncingRef.current = false;
+      };
+      const syncPa2P = () => {
+        if (isSyncingRef.current || !presentMapRef.current) return;
+        isSyncingRef.current = true;
+        presentMapRef.current.setView(pastMap.getCenter(), pastMap.getZoom(), { animate: false });
+        isSyncingRef.current = false;
+      };
+      presentMap.on('move zoom', syncP2Pa);
+      pastMap.on('move zoom', syncPa2P);
+    });
+
+    return () => {
+      if (presentMapRef.current) { presentMapRef.current.remove(); presentMapRef.current = null; }
+      if (pastMapRef.current)    { pastMapRef.current.remove();    pastMapRef.current = null; }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Swap PAST tile layers when pastYear changes ─────────────────────────────────
+  useEffect(() => {
+    import('leaflet').then((L) => {
+      const map = pastMapRef.current;
+      if (!map) return;
+
+      // Remove old layers
+      if (pastModisRef.current)   { map.removeLayer(pastModisRef.current);   pastModisRef.current = null; }
+      if (pastLandsatRef.current) { map.removeLayer(pastLandsatRef.current); pastLandsatRef.current = null; }
+
+      // MODIS 250 m — global, low zoom base
+      const modisTiles = L.tileLayer(modisUrl(pastYear), {
+        maxZoom: 9, maxNativeZoom: 9, tileSize: 256, opacity: 1,
+      });
+      modisTiles.addTo(map);
+      pastModisRef.current = modisTiles;
+
+      // Landsat WELD 30 m — medium zoom detail
+      const landsatTiles = L.tileLayer(landsatUrl(pastYear), {
+        maxZoom: 12, maxNativeZoom: 12, tileSize: 256, opacity: 1,
+      });
+      landsatTiles.addTo(map);
+      pastLandsatRef.current = landsatTiles;
+
+      // Esri Wayback (~2014) fills in zoom > 12 where Landsat caps out
+      L.tileLayer(
+        'https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/WMTS/1.0.0/default028mm/MapServer/tile/10/{z}/{y}/{x}',
+        { minZoom: 13, maxZoom: 19, opacity: 0.9 }
+      ).addTo(map);
+
+      // Place name labels on top
+      L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
+        { subdomains: 'abcd', maxZoom: 19, opacity: 0.7 }
+      ).addTo(map);
+    });
+  }, [pastYear]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Pan/zoom to new center/zoom when props change ───────────────────────────────
+  useEffect(() => {
+    if (presentMapRef.current) presentMapRef.current.setView(center, zoom);
+    if (pastMapRef.current)    pastMapRef.current.setView(center, zoom);
+  }, [center[0], center[1], zoom]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Draw AOI polygon on both maps ───────────────────────────────────────────────
+  useEffect(() => {
+    import('leaflet').then((L) => {
+      const pairs = [
+        { mRef: presentMapRef, pRef: presentPolyRef },
+        { mRef: pastMapRef,    pRef: pastPolyRef },
+      ];
+      pairs.forEach(({ mRef, pRef }) => {
+        if (!mRef.current) return;
+        if (pRef.current) { pRef.current.remove(); pRef.current = null; }
+        if (coordinates && coordinates.length >= 3) {
+          pRef.current = L.polygon(coordinates as [number, number][], {
+            color: '#38bdf8', weight: 2.5, fillColor: '#0284c7', fillOpacity: 0.2,
+          }).addTo(mRef.current);
+        }
+      });
+      if (presentMapRef.current && coordinates && coordinates.length >= 3) {
+        const bounds = L.latLngBounds(coordinates.map(([la, ln]) => [la, ln] as [number, number]));
+        presentMapRef.current.fitBounds(bounds, { padding: [40, 40] });
+      }
+    });
+  }, [coordinates]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Slider drag via Pointer Events ──────────────────────────────────────────────
+  const onPtrDown = (e: React.PointerEvent) => {
+    isDraggingRef.current = true;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+  const onPtrMove = (e: React.PointerEvent) => {
+    if (!isDraggingRef.current || !wrapperRef.current) return;
+    const rect = wrapperRef.current.getBoundingClientRect();
+    const pct = Math.round(Math.max(0, Math.min((e.clientX - rect.left) / rect.width, 1)) * 100);
+    onSliderChange(pct);
+  };
+  const onPtrUp = () => { isDraggingRef.current = false; };
+
+  return (
+    <div
+      ref={wrapperRef}
+      className="relative w-full h-full overflow-hidden select-none"
+      onPointerMove={onPtrMove}
+      onPointerUp={onPtrUp}
+    >
+      {/* PRESENT map — always visible beneath */}
+      <div ref={presentDivRef} className="absolute inset-0 w-full h-full" />
+
+      {/* PAST map — clipped to left portion; sepia tint marks it as "old" */}
+      <div
+        className="absolute inset-0 w-full h-full"
+        style={{
+          clipPath: `inset(0 ${100 - sliderPos}% 0 0)`,
+          filter: 'sepia(0.35) saturate(0.8) brightness(0.9)',
+        }}
+      >
+        <div ref={pastDivRef} className="absolute inset-0 w-full h-full" />
+      </div>
+
+      {/* Divider line */}
+      <div
+        className="absolute top-0 bottom-0 z-30 w-0.5 bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.7)] pointer-events-none"
+        style={{ left: `${sliderPos}%` }}
+      />
+
+      {/* Draggable handle */}
+      <div
+        className="absolute top-1/2 z-40 -translate-y-1/2 -translate-x-1/2 cursor-ew-resize touch-none"
+        style={{ left: `${sliderPos}%` }}
+        onPointerDown={onPtrDown}
+      >
+        <div className="w-9 h-9 rounded-full bg-sky-400 border-2 border-white shadow-xl flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            className="text-slate-950">
+            <path d="M21 7H3M15 12H9m12 5H3"/>
+          </svg>
+        </div>
+      </div>
+
+      {/* Side labels */}
+      <div className="absolute top-3 left-3 z-20 bg-slate-900/85 backdrop-blur-md px-2.5 py-1 rounded-lg text-[11px] font-bold text-amber-400 border border-slate-700 shadow pointer-events-none">
+        PAST · {pastYear} &nbsp;·&nbsp; Landsat / MODIS
+      </div>
+      <div className="absolute top-3 right-3 z-20 bg-slate-900/85 backdrop-blur-md px-2.5 py-1 rounded-lg text-[11px] font-bold text-sky-400 border border-slate-700 shadow pointer-events-none">
+        PRESENT · {presentYear} &nbsp;·&nbsp; Esri Satellite
+      </div>
+
+      {/* Footer hint */}
+      <div className="absolute bottom-2 left-2 right-2 z-20 bg-slate-950/80 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] text-slate-400 border border-slate-800 font-mono flex items-center gap-2 pointer-events-none">
+        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+        <span>Pan or zoom to any location — both sides load live real satellite imagery</span>
+      </div>
+    </div>
+  );
+};
